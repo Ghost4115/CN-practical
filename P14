@@ -1,0 +1,66 @@
+Step 1: Understand IPsec, ESP, and AH
+Protocol	Purpose
+IPsec	Provides secure communication at the IP layer using encryption and/or authentication.
+ESP (Encapsulating Security Payload)	Provides encryption and optional authentication. Payload is encrypted.
+AH (Authentication Header)	Provides authentication and integrity but no encryption.
+Observation in Wireshark:
+ESP packets: Encrypted payload, source/destination IP visible.
+AH packets: Shows integrity/authentication fields, payload is not encrypted.
+
+Step 2: Setup Environment
+Two machines (PC1 and PC2) connected over a network (LAN or VPN).
+Configure IPsec policy between them (e.g., Windows/Linux supports IPsec policies).
+For Windows: Use Windows Firewall with Advanced Security → Connection Security Rules → New Rule
+For Linux: Use strongSwan or setkey for IPsec configuration
+Example:
+PC1 IP: 192.168.1.2
+PC2 IP: 192.168.1.3
+Create IPsec tunnel between these two IPs
+
+Step 3: Capture Packets in Wireshark
+Open Wireshark on one PC.
+Select the network interface connected to the other PC.
+Start capturing packets.
+
+Step 4: Apply Display Filters
+Filter for AH packets
+ip.proto == 51
+AH uses IP protocol number 51
+Displays authentication-only packets
+Filter for ESP packets
+ip.proto == 50
+ESP uses IP protocol number 50
+Displays encrypted payloads
+Optional: Capture IPsec with specific IPs
+ip.addr == 192.168.1.2 && ip.addr == 192.168.1.3
+Ensures you only see packets between your two PCs
+
+Step 5: Analyze Packets
+ESP Packets:
+Payload is encrypted → you cannot read the data
+Headers: Source IP, Destination IP, ESP fields (SPI, Sequence Number, Encrypted Data)
+AH Packets:
+Payload visible but integrity/authentication fields ensure the packet was not tampered
+Headers: Source IP, Destination IP, AH header
+Count packets:
+Wireshark status bar → shows number of AH/ESP packets
+You can also use Statistics → Protocol Hierarchy
+
+Step 6: Save Capture
+Stop the capture → File → Save As → ipsec_capture.pcap
+Include screenshots of ESP and AH packets in your report
+
+Step 7: Optional Tasks for Report
+Task	Observation
+Count number of ESP packets	Wireshark Statistics → Protocol Hierarchy
+Count number of AH packets	Same as above
+Note IP addresses	Source/Destination IP visible in headers
+Encryption / Authentication	Compare AH vs ESP payload visibility
+
+✅ Tips:
+
+Make sure IPsec tunnel is active before capturing
+
+Use simulation or VPN software if you don’t have two physical machines
+
+For clarity, use Wireshark coloring rules for ESP (green) and AH (blue) packets
