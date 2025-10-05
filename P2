@@ -1,29 +1,62 @@
-⭐Step 1: Open Wireshark
-Double-click the Wireshark icon on your PC.
-You’ll see the main screen with a list of network interfaces.
+tep 1: Open Wireshark
 
-⭐Step 2: Select the Network Interface
-Look for Ethernet (or the name of your LAN card) — this is the interface connected to your switch.
-Click once on the interface name.
-You’ll see live graphs and packet counters moving if there’s network activity.
+Make sure Wireshark is installed on your PC.
 
-⭐Step 3: Start Capturing
-Click the green shark fin icon 🦈 at the top left (it says Start capturing packets)
-Wireshark now starts recording all traffic on that interface.
+Double-click to open it.
 
-⭐Step 4: Filter Ping Packets
-At the top, there’s a filter bar (where it says Apply a display filter...)
+🧩 Step 2: Identify Your Network Interface
+
+On the Wireshark home screen, you’ll see a list under “Capture → Interfaces” (or just the main list of available network adapters).
+
+Look for the one that is connected to your LAN (the switch). Usually, it’s labeled as:
+
+Ethernet
+
+Or the name of your network card
+
+You’ll see packets being captured live on interfaces that already have traffic.
+
+💡 Tip: If unsure, check which interface shows activity when you move the mouse or ping another PC.
+
+🧩 Step 3: Start Capturing
+
+Click once on your Ethernet interface to select it.
+
+Click the blue shark fin icon (top-left) → Start Capturing.
+
+Wireshark will start displaying all packets passing through your network interface.
+
+🧩 Step 4: Perform Ping Test
+
+While Wireshark is capturing, open Command Prompt on your PC.
+
 Type:
+
+ping 192.168.11.68
+
+
+Press Enter.
+
+You will now see ICMP packets (Echo Request and Echo Reply) appear in Wireshark.
+
+🧩 Step 5: Filter Only Ping Packets
+
+In the Filter bar at the top, type:
+
 icmp
+
+
 Press Enter
-Now Wireshark will only show Ping packets (Echo Request/Reply).
 
-⭐Step 5: Stop Capturing
-After you’ve done the ping from Command Prompt, click the red square icon ⬛ at the top left to stop capturing.
+Now you’ll see only PING-related packets — this makes it easy to analyze.
 
-⭐Step 6: Save Capture
-Go to File → Save As
-Save the file as .pcap (e.g., LAN_ping.pcap) — this is what you can submit in your practical report.
+🧩 Step 6: Stop Capturing
+
+After a few seconds of pinging, click the red square (Stop) button on the top toolbar.
+
+You can save the capture as .pcap file for your practical report.
+
+✅ Now you can:
 
 ✅ Now you can see:
 Source IP → sender of packet
