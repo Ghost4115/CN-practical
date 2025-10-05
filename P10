@@ -1,0 +1,54 @@
+⭐Step 1: Prepare for Packet Capture
+Open Wireshark on your PC.
+Select the network interface connected to the internet (Ethernet/Wi-Fi).
+Make sure no unnecessary applications are running to reduce extra traffic.
+
+⭐Step 2: Capture TCP Traffic to/from Facebook
+Start a new capture on your interface.
+Open Facebook and log in.
+Stop the capture after logging in.
+Filter for TCP packets only (display filter)
+tcp && ip.addr == <Facebook_IP>
+Replace <Facebook_IP> with the IP address of Facebook (you can find by pinging facebook.com in Command Prompt: ping facebook.com).
+Save capture:
+File → Save As → tcp_facebook.pcap
+
+⭐Step 3: Capture HTTP Traffic to/from Facebook (Other Websites)
+Start a new capture.
+Browse Facebook (or another website that uses HTTP).
+Stop the capture after logging in/browsing.
+Filter for HTTP traffic:
+http && ip.addr == <Website_IP>
+Replace <Website_IP> with the IP address of the other website.
+Save capture:
+File → Save As → http_facebook_other.pcap
+
+⭐Step 4: Display Filter for TCP Flags
+To count TCP packets with specific flags, use Wireshark display filters:
+SYN:
+tcp.flags.syn == 1
+PSH:
+tcp.flags.push == 1
+RST:
+tcp.flags.reset == 1
+Apply each filter separately on the captured TCP file (tcp_facebook.pcap).
+Wireshark will show the number of packets matching the filter in the status bar at the bottom.
+Fraction calculation:
+Fraction = (Number of packets with flag set) / (Total TCP packets) * 100%
+
+⭐Step 5: Count TCP vs HTTP Packets for Facebook / Other Website
+Open the HTTP capture file (http_facebook_other.pcap).
+Apply TCP filter:
+tcp && ip.addr == <Website_IP>
+Count number of packets → TCP packets sent/received.
+Apply HTTP filter:
+http && ip.addr == <Website_IP>
+Count number of packets → HTTP packets sent/received.
+Compare counts:
+Some TCP packets are not HTTP (like ACKs, HTTPS handshake, etc.)
+Some TCP packets carry HTTP data → difference shows non-HTTP TCP packets.
+
+⭐Step 6: Save Output Files
+Wireshark → File → Export Packet Dissections → As Plain Text
+Save as tcp_output.txt or http_output.txt
+Include filter expressions and packet counts in your report.
