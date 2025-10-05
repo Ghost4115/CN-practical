@@ -1,100 +1,87 @@
-#include <iostream>
-#include <thread>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <cstring>
+import socket
+import threading
+import time
 
-using namespace std;
+# -------------------
+# TCP Server
+# -------------------
+def tcp_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 12345))
+    server_socket.listen(1)
+    print("[TCP Server] Waiting for connection...")
 
-void TCPServer() {
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(8080);
+    conn, addr = server_socket.accept()
+    print(f"[TCP Server] Connected by {addr}")
 
-    bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
-    listen(server_fd, 1);
-    cout << "[TCP Server] Waiting for client..." << endl;
+    data = conn.recv(1024).decode()
+    print(f"[TCP Server] Client says: {data}")
 
-    int client = accept(server_fd, nullptr, nullptr);
-    char buffer[1024] = {0};
-    read(client, buffer, 1024);
-    cout << "[TCP Server] Message from client: " << buffer << endl;
-    send(client, "Hello from TCP Server", 21, 0);
-    close(client);
-    close(server_fd);
-}
+    conn.sendall("Hello from TCP Server".encode())
+    conn.close()
+    print("[TCP Server] Connection closed.")
 
-void TCPClient() {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in serv_addr{};
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(8080);
-    inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+# -------------------
+# TCP Client
+# -------------------
+def tcp_client():
+    time.sleep(1)  # wait for server to start
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(('localhost', 12345))
 
-    connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    send(sock, "Hello from TCP Client", 21, 0);
-    char buffer[1024] = {0};
-    read(sock, buffer, 1024);
-    cout << "[TCP Client] Message from server: " << buffer << endl;
-    close(sock);
-}
+    client_socket.sendall("Hello from TCP Client".encode())
+    data = client_socket.recv(1024).decode()
+    print(f"[TCP Client] Server says: {data}")
 
-void UDPServer() {
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    sockaddr_in servaddr{}, cliaddr{};
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(8081);
-    bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    client_socket.close()
+    print("[TCP Client] Connection closed.")
 
-    cout << "[UDP Server] Waiting for message..." << endl;
-    socklen_t len = sizeof(cliaddr);
-    char buffer[1024];
-    int n = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*)&cliaddr, &len);
-    buffer[n] = '\0';
-    cout << "[UDP Server] Message from client: " << buffer << endl;
-    sendto(sockfd, "Hello from UDP Server", 22, 0, (struct sockaddr*)&cliaddr, len);
-    close(sockfd);
-}
+# -------------------
+# UDP Server
+# -------------------
+def udp_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_socket.bind(('localhost', 12346))  # use different port
+    print("[UDP Server] Waiting for message...")
 
-void UDPClient() {
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    sockaddr_in servaddr{};
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(8081);
-    inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
+    data, addr = server_socket.recvfrom(1024)
+    print(f"[UDP Server] Received from {addr}: {data.decode()}")
 
-    sendto(sockfd, "Hello from UDP Client", 22, 0, (struct sockaddr*)&servaddr, sizeof(servaddr));
-    char buffer[1024];
-    socklen_t len = sizeof(servaddr);
-    int n = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*)&servaddr, &len);
-    buffer[n] = '\0';
-    cout << "[UDP Client] Message from server: " << buffer << endl;
-    close(sockfd);
-}
+    server_socket.sendto("Hello from UDP Server".encode(), addr)
+    print("[UDP Server] Response sent.")
 
-int main() {
-    int choice;
-    cout << "Choose Option:\n1. TCP\n2. UDP\n";
-    cin >> choice;
+# -------------------
+# UDP Client
+# -------------------
+def udp_client():
+    time.sleep(1)  # wait for server to start
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_address = ('localhost', 12346)
 
-    if(choice == 1) {
-        thread server(TCPServer);
-        sleep(1); // wait for server to start
-        TCPClient();
-        server.join();
-    } else if(choice == 2) {
-        thread server(UDPServer);
-        sleep(1);
-        UDPClient();
-        server.join();
-    } else {
-        cout << "Invalid Choice!" << endl;
-    }
+    client_socket.sendto("Hello from UDP Client".encode(), server_address)
+    data, addr = client_socket.recvfrom(1024)
+    print(f"[UDP Client] Server says: {data.decode()}")
 
-    return 0;
-}
+    client_socket.close()
+    print("[UDP Client] Connection closed.")
+
+# -------------------
+# Run all using threads
+# -------------------
+threads = []
+
+# TCP
+threads.append(threading.Thread(target=tcp_server))
+threads.append(threading.Thread(target=tcp_client))
+
+# UDP
+threads.append(threading.Thread(target=udp_server))
+threads.append(threading.Thread(target=udp_client))
+
+# Start all threads
+for t in threads:
+    t.start()
+
+# Wait for all threads to finish
+for t in threads:
+    t.join()
