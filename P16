@@ -1,0 +1,17 @@
+import socket
+
+# Forward lookup (URL to IP)
+url = input("Enter a domain name (e.g., google.com): ")
+try:
+    ip = socket.gethostbyname(url)
+    print(f"IP address of {url} is: {ip}")
+except socket.gaierror:
+    print("Invalid domain name")
+
+# Reverse lookup (IP to URL)
+ip_input = input("Enter an IP address (e.g., 142.250.193.110): ")
+try:
+    host = socket.gethostbyaddr(ip_input)
+    print(f"Host name for {ip_input} is: {host[0]}")
+except socket.herror:
+    print("Host not found for given IP")
