@@ -1,0 +1,100 @@
+#include <iostream>
+#include <thread>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <cstring>
+
+using namespace std;
+
+void TCPServer() {
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(8080);
+
+    bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
+    listen(server_fd, 1);
+    cout << "[TCP Server] Waiting for client..." << endl;
+
+    int client = accept(server_fd, nullptr, nullptr);
+    char buffer[1024] = {0};
+    read(client, buffer, 1024);
+    cout << "[TCP Server] Message from client: " << buffer << endl;
+    send(client, "Hello from TCP Server", 21, 0);
+    close(client);
+    close(server_fd);
+}
+
+void TCPClient() {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    sockaddr_in serv_addr{};
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(8080);
+    inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+
+    connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    send(sock, "Hello from TCP Client", 21, 0);
+    char buffer[1024] = {0};
+    read(sock, buffer, 1024);
+    cout << "[TCP Client] Message from server: " << buffer << endl;
+    close(sock);
+}
+
+void UDPServer() {
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockaddr_in servaddr{}, cliaddr{};
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = INADDR_ANY;
+    servaddr.sin_port = htons(8081);
+    bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr));
+
+    cout << "[UDP Server] Waiting for message..." << endl;
+    socklen_t len = sizeof(cliaddr);
+    char buffer[1024];
+    int n = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*)&cliaddr, &len);
+    buffer[n] = '\0';
+    cout << "[UDP Server] Message from client: " << buffer << endl;
+    sendto(sockfd, "Hello from UDP Server", 22, 0, (struct sockaddr*)&cliaddr, len);
+    close(sockfd);
+}
+
+void UDPClient() {
+    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    sockaddr_in servaddr{};
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(8081);
+    inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
+
+    sendto(sockfd, "Hello from UDP Client", 22, 0, (struct sockaddr*)&servaddr, sizeof(servaddr));
+    char buffer[1024];
+    socklen_t len = sizeof(servaddr);
+    int n = recvfrom(sockfd, buffer, 1024, 0, (struct sockaddr*)&servaddr, &len);
+    buffer[n] = '\0';
+    cout << "[UDP Client] Message from server: " << buffer << endl;
+    close(sockfd);
+}
+
+int main() {
+    int choice;
+    cout << "Choose Option:\n1. TCP\n2. UDP\n";
+    cin >> choice;
+
+    if(choice == 1) {
+        thread server(TCPServer);
+        sleep(1); // wait for server to start
+        TCPClient();
+        server.join();
+    } else if(choice == 2) {
+        thread server(UDPServer);
+        sleep(1);
+        UDPClient();
+        server.join();
+    } else {
+        cout << "Invalid Choice!" << endl;
+    }
+
+    return 0;
+}
